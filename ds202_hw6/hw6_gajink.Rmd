@@ -1,0 +1,84 @@
+---
+title: "Homework 6"
+author: "GaJin Kim"
+date: "November 30, 2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```
+Importing & Cleaning Data
+```
+```{r message=FALSE, warning=FALSE}
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(ggrepel)
+
+#dog <- read_xlsx('KIB - Best in Show (public).xlsx', sheet='Best in show')
+dog <- read_xlsx('KIB - Best in Show (public).xlsx', sheet='Best in show full sheet', skip=3)
+
+# Column renames:
+# Breed = breed of dog (1), Type = type of dog (3), Size = size of dog (32), Score = data score (5), Popularity = popularity (6), Intelligence = intelligence of the dog (41)
+dog <- dog[, c(1, 3, 32, 5, 6, 41)]
+colnames(dog) <- c('Breed', 'Type', 'Size', 'Score', 'Popularity', 'Intelligence')
+
+# No choice but to drop rows without a score (top 87 dog breeds)
+dog <- dog %>% filter(!is.na(Score))
+
+dog$Type <- as.factor(dog$Type)
+dog$Size <- as.factor(ordered(dog$Size, levels=c('small', 'medium', 'large')))
+dog$Popularity <- as.integer(dog$Popularity)
+
+# According to the Best in Show graphic: 
+# Dumb (Lowest, Average) & Clever (Above Average, Fair, Excellent, Brightest)
+dog$Intelligence[dog$Intelligence == 'Lowest' | dog$Intelligence == 'Average'] <- 'dumb'
+dog$Intelligence[dog$Intelligence == 'Above average' | dog$Intelligence == 'Fair' | dog$Intelligence == 'Excellent' | dog$Intelligence == 'Brightest'] <- 'clever'
+dog$Intelligence <- as.factor(ordered(dog$Intelligence, levels=c('clever', 'dumb')))
+
+#head(dog)
+```
+```
+Plot
+```
+```{r fig.height = 7, fig.width = 12}
+# text:   Breed
+# color:  Type
+# size:   Size
+# x-axis: Score
+# y-axis: Popularity
+# shape:  Intelligence
+
+dog_plot <- dog %>% ggplot(aes(text=Breed, 
+                               color=Type, 
+                               size=Size, 
+                               x=Score, 
+                               y=Popularity, 
+                               shape=Intelligence)) + 
+                    geom_point() + 
+                    scale_y_reverse() +
+                    scale_shape_manual(values = c(24, 25)) + 
+                    scale_color_manual(values = c('herding'='coral1',
+                                                  'hound'='mediumorchid4', 
+                                                  'non-sporting'='yellowgreen', 
+                                                  'sporting'='brown2', 
+                                                  'terrier'='darkgoldenrod2', 
+                                                  'toy'='maroon',
+                                                  'working'='skyblue4')) +
+                    theme(axis.text=element_blank(), 
+                          axis.ticks=element_blank(),
+                          panel.grid.major = element_blank(),
+                          panel.grid.minor = element_blank(),
+                          panel.background = element_rect(fill = 'floralwhite')) +
+                    geom_text_repel(aes(label=Breed), size=2.5) + 
+                    xlab('our data score') + 
+                    ylab('popularity') + 
+                    ggtitle('Best in Show: The Ultimate Data Dog') + 
+                    geom_hline(yintercept = 77) +
+                    geom_vline(xintercept = 2.35)
+
+dog_plot
+```

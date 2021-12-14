@@ -1,0 +1,123 @@
+---
+title: "Homework #3"
+author: "Gajin Kim"
+date: "9/23/2021"
+output: html_document
+---
+***
+To load dataset,
+```{r}
+library(classdata)
+library(dplyr)
+data(ames)
+
+```
+***
+Include at least one `ggplot` visualization in each of your answer except for Question 2, and describe what you find. 
+
+1. Explore and explain what is the relationship between the sale price (y) and living area size (x). In your visualization, add a straight line with intercept at 20000 and slope equal to 100. Look at `?geom_abline`, and in particular the examples. Remark on any patterns you find and the straight line.
+```{r}
+library(ggplot2)
+ggplot(data = ames, aes(x = GrLivArea, y = SalePrice)) + xlab("Living Area (sq feet)") + ylab("Sale Price ($)") + geom_point() + geom_abline(intercept = 20000, slope = 100)
+```
+```
+There appears to be a positive linear relationship between the sale price and the living area size. The higher the sale prices and living areas become, the less accurate our linear regression model becomes (i.e. our residuals become larger). This is further shown based on the fact that the majority of the outliers appear towards the end of our model.  
+```
+***
+2. Describe at least two types of anomalies in the previous plot. What do they mean?
+```{r}
+# Question 2 does not require a ggplot visualization (stated above).
+```
+```
+One anomaly in the previous plot was that the points were not distributed evenly. There no points with a sale price below $20,000 or a living area with less than 250 square feet. Furthermore, once we get to sale prices of 3e+05 ($300,000) and living areas of 2500 square feet, points become increasingly sparse. 
+
+From this anomaly we can conclude that the majority of the housing in Ames is between $20,000 and $300,000 and have a living area of somewhere between 250 and 25000 square feet.
+```
+```
+A second anomaly is the graph's tendency to become increasingly less accurate the further out we go. 
+
+Based on this observation we can come to the conclusion that living area may not a very good predictor for sale price. That's to say, features such as location, year built, and various amenities (like pools, tennis courts) are more indicitive of the overall sale price. 
+```
+***
+3. Visualize the number of sales by the overall condition. Make sure the conditions are ordered from the best to the worst. What do you find?
+```{r}
+ggplot(data = ames, aes(x = OverallCond)) + xlab("Condition (1-10)") + geom_bar() + coord_flip() 
+
+summary(ames$OverallCond)
+# ames %>% count(OverallQual)
+```
+```
+From the barplot and summary we can observe that 50% of all sales had a condition between 5 and 6 with the average being 5.575.
+
+Additionally, we observe relatively few houses sold with conditions of 1, 2, and 10.
+```
+***
+4. Introduce a variable `houseAge` into the data set which stands for the age of the house at the time when it was sold. How does the age of the house affect the sale price?
+```{r}
+ames$houseAge <- ames$YrSold - ames$YearBuilt
+ggplot(data = ames, aes(x = houseAge, y = SalePrice)) + xlab("Age at time Sold (years)") + ylab("Sale Price ($)") + geom_point() + coord_flip() 
+```
+```
+There is a slight inverse (possibly exponential) relationship between house age and sale price. As we can loosely observe from the graph, the older the house, the less it tends to sell for. 
+
+Also, there seems to be a gap in the number of houses sold at ~25 years. This could possibly imply that most houses that are ~25 years of age are off the market due to various reasons, such as being occupied. 
+```
+***
+5. Were there more sales of nice houses or poor houses? Make sure to state your criterion for a house to be “nice” or otherwise “poor”. Choose an appropriate graph type.
+```
+nice criteria: 
+* YearBuilt > 1971 (mean: 1971) #summary(ames$YearBuilt)
+* Living Area > 1515 sq ft (mean: 1515) #summary(ames$GrLivArea)
+* Overall Condition: 6+
+
+poor criteria: 
+* YearBuilt < 1971 (mean: 1971)
+* Living Area < 1515 sq ft (mean: 1515)
+* Overall Condition: 4-
+```
+```{r}
+nice <- nrow(subset(ames, YearBuilt > 1971 & GrLivArea > 1515 & OverallCond >= 6)) # 56
+poor <- nrow(subset(ames, YearBuilt < 1971 & GrLivArea < 1515 & OverallCond <= 4)) # 51
+NicePoor <- data.frame(Type = c("nice", "poor"), Count = c(nice, poor)) # new dataframe
+
+ggplot(NicePoor, aes(x = Type, y = Count)) + geom_col()
+```
+```
+Based on my chosen criteria, the number of nice houses sold exceeded that of poor houses by 5. However, based on the number of total houses sold, a 5 house difference is not significant enough to come to any real conclusions.
+```
+***
+6. How do the neighborhood and the slope of property affect the relationship between sale price and year built? Focus on the neighborhoods of Brookside, Clear Creek, College Creek, and Somerset only. Find a visualization that incorporates all four variables. Interpret the result.
+```{r}
+# slope types: "Gtl" "Mod" "Sev # unique(ames$LandSlope)
+# neighborhoods: "BrkSide" "ClearCr" "CollgCr" "Somerst"
+
+FocusNeighborhoods <-  ames[ames$Neighborhood %in% c('BrkSide', 'ClearCr', 'CollgCr', 'Somerst'), ]
+
+ggplot(FocusNeighborhoods, aes(x=YearBuilt, y=SalePrice, color=LandSlope)) + xlab("Year Built") + ylab("Sale Price ($)") + geom_point() + facet_wrap(~Neighborhood)
+```
+```
+Amongst the four selected neighborhoods, Somerset only consists of gentle slopes, Brookside and College Creek mostly have gentle and a few moderate slopes, and Clear Creek has a fairly even distribution of gentle, moderate, and severe slopes.
+
+Brookside tends to have older houses, Clear creek has a fairly even distribution of old and new houses, and College Creek and Somerset have mostly newer houses. 
+
+Brookside tends to have cheaper houses compared to Clear Creek, College Creek, and Somerset.
+
+Overall, it seems that neighborhood has a greater impact than landslope when it comes to predicting the sale price and year built. This makes sense because when new neighborhoods are constructed, a lot of their houess are built and sold around the same time.
+```
+***
+7. Create a side-by-side histogram showing the sales price for the different types of buildings. Comment on the result.
+```{r}
+unique(ames$BldgType) # "1Fam" "2fmCon" "Duplex" "TwnhsE" "Twnhs"
+
+BuildingTypes <-  ames[ames$BldgType %in% c('1Fam', '2fmCon', 'Duplex', 'TwnhsE', 'Twnhs'), ]
+
+bw <- 10000
+ggplot(BuildingTypes, aes(x = SalePrice, fill=BldgType)) + geom_histogram(binwidth=bw) + ggtitle(paste0("binwidth = ", bw))
+```
+```
+Based on the side-by-side histogram we can observe that all building types generally settle around the $100,000 to $250,000 range.
+
+The building type that has the greatest values is 1 Family, followed by TwnhsE. 2 family condos, duplexes, and town hs are all heavily concentrated in the same area.
+
+Furthermore, the sale prices of 1 family buildings have the greatest distrbution of all building types.
+```

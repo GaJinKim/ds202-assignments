@@ -1,0 +1,102 @@
+---
+title: "Homework #2"
+author: "Gajin Kim"
+date: "9/8/2021"
+output: html_document
+---
+***
+Example question and answer
+
+
+0. What is the smallest positive odd integer? Store it in a variable named ```a0```
+```{r}
+a0 <- 1
+a0
+```
+***
+R Commands
+
+
+1. An Olympic diving athelete’s scores given by 6 referees were 9.3, 8.7, 9.5, 10, 9, and 8.9. The final score for that dive is the average of the scores after crossing out the highest and lowest scores. Find the final score for that dive. Store the answer in a variable named ave and print.
+```{r}
+scores <- sort(c(9.3, 8.7, 9.5, 10, 9, 8.9), decreasing = FALSE)
+ave <- mean(scores[2:5]) # average of all scores, excluding first and last
+ave
+```
+
+2. Create a vector of numbers (with length 21) to show whether the years of 2000, 2001, …, 2020 has Olympic Games. An entry of the vector should be 1 if the corresponding year has Olympic Games, and 0 otherwise. Note that Olympic Games take place every two years (there are both summer and winter Olympic Games), and that 2020 does not have Olympic Games. Store the answer in a variable named olympic and print.
+```{r}
+olympic <- rep(c(1,0), length.out = 21) # length 21
+olympic[21] <- 0 # 2020 does not have an Olympic Game
+olympic
+```
+
+3. Calculate the BMI of Chris and Mary, who are siblings. Chris is 1.8 meters tall and 70 kilograms in weight; Mary is 1.65 meters tall and 49 kilograms in weight. The formula for BMI is BMI = weight (in kg) / height^2 (in meter). Store the answers in a vector of length 2 named bmi and print.
+```{r}
+chris <- 70/1.8^2
+mary <- 49/1.65^2
+
+bmi <- c(chris, mary)
+bmi
+```
+***
+Cars and mileage
+
+
+For this part we will use the mpg data set, you can access the data by loading the package ggplot2 using library(ggplot2). If you don’t have ggplot installed, installed it using install.packages('ggplot2'). The mpg data includes information about fuel economy of popular car models for the years 1999 and 2008 as collected by the US Environmental Protection Agency. An answer should include a short paragraph of text for the explanation understandable to a reader outside of class, together with appropriate R code, outputs, and graphs.
+```{r}
+library(ggplot2)
+```
+
+1. What are the 5 least fuel-efficient models in terms of highway mileage? Storage the data frame containing all information of these five models in a variable named worst5 and print. (Hint: Here are a few things you are free to define. E.g., which variable to use to characterize “fuel economy”, and what is a “model”. Please state your definitions.)
+```{r}
+worst5 <- head(mpg[order(mpg$hwy), decreasing = FALSE], 5) # orders the cars from worst to best highway mileage and stores the first 5.
+worst5
+```
+The 5 least fuel-efficient models in terms of highway mileage were the dodge dakota pickup, dodge durango, dodge ram 1500 pickup (auto), dodge ram 1500 pickup (manual), and the jeep grand cherokee. All five cars were manufactured in 2008 and have the same highway mileage of 12mpg. Furthermore, all of these cars were 4 wheel drives with 8 cylinders.
+
+
+2. How many different midsize models are included in this dataset? Storage the answer in a variable named nummidsize and print.
+```{r}
+# unique(mpg$class, incomparables = FALSE) # list of distinct model classes
+nummidsize <- sum(mpg$class == "midsize") # stores the total number of entries classified as midsize
+nummidsize
+```
+There are a total of 7 different types of car classes within this dataset spread across 334 rows. These include compact, midsize, suv, 2seater, minivan, pickup, and subcompact. In total, there are 41 different midsize cars contained within this dataset.
+
+3. Create a scatterplot of hwy and cty and describe the relationship. Why are there so few points visible? Explain your findings.
+```{r}
+plot(mpg$hwy) # black - highway mpg
+points(mpg$cty, col='blue') # blue - city mpg
+```
+
+According to the graph, for any given car, its highway mpg is higher than its city mpg. This is most likely due to the fact that stop signs and traffic lights are frequent in cities, causing the average mpg to go down. We can also observe that the difference between highway and city mpg is not uniform among different cars. That's to say, some cars perform far better on the highway compared to the city while others don't.
+
+4. Which manufacturer produces cars with higher fuel efficiency, Dodge or Toyota? Use graphs and summary statistics to answer this question. Explain your findings.
+```{r}
+# average mpg = [sum of each car's (hwy/cty) mpg] / [number of cars]
+toyotaHwy <- sum(mpg$hwy[mpg$manufacturer == "toyota"])/sum(mpg$manufacturer == "toyota")
+toyotaCty <- sum(mpg$cty[mpg$manufacturer == "toyota"])/sum(mpg$manufacturer == "toyota")
+dodgeHwy <- sum(mpg$hwy[mpg$manufacturer == "dodge"])/sum(mpg$manufacturer == "dodge")
+dodgeCty <- sum(mpg$cty[mpg$manufacturer == "dodge"])/sum(mpg$manufacturer == "dodge")
+
+toyotaMpg <- c(toyotaHwy, toyotaCty) # Toyota average highway & city mpg values
+dodgeMpg <- c(dodgeHwy, dodgeCty) # Dodge average highway & city mpg values
+toyotaMpg
+dodgeMpg
+```
+As we can see from the report above, Toyota is more fuel efficient than Dodge in terms of both highway and city mpg. Toyota has a 24.9mpg fuel efficiency on the highway, while Dodge only has a 17.9mpg. In the city, Toyota has an 18.5mpg and Dodge has just 13.1mpg. 
+
+```{r}
+plot(mpg$hwy[mpg$manufacturer == "toyota"])
+points(mpg$hwy[mpg$manufacturer == "dodge"], col='blue')
+```
+
+
+Furthermore, we can see a consistent trend in the graph above displaying Toyota's highway mpg (black) and Dodge's highway mpg (blue). Toyota is clearly outperforming Dodge in terms of mpg. The equivalent graph for the city mpg can be observed below.
+```{r}
+plot(mpg$cty[mpg$manufacturer == "toyota"])
+points(mpg$cty[mpg$manufacturer == "dodge"], col='blue')
+```
+
+
